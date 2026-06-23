@@ -1,0 +1,63 @@
+//@version=5
+indicator("Supertrend", overlay = true)
+
+atrPeriod = input.int(10,    "ATR Length", minval = 1)
+factor =    input.float(3.0, "Factor",     minval = 0.01, step = 0.01)
+
+[supertrend, direction] = ta.supertrend(factor, atrPeriod)
+
+supertrend := barstate.isfirst ? na : supertrend
+upTrend =    plot(direction < 0 ? supertrend : na, "Up Trend",   color = color.green, style = plot.style_linebr)
+downTrend =  plot(direction < 0 ? na : supertrend, "Down Trend", color = color.red,   style = plot.style_linebr)
+bodyMiddle = plot(barstate.isfirst ? na : (open + close) / 2, "Body Middle",display = display.none)
+
+
+
+len = input(20,"Ema Length")
+
+ema = ta.ema(close,len)
+
+plot(ema, color = color.lime)
+
+buy = low > ema and ta.change(direction)
+sell = high < ema and ta.change(direction)
+
+
+allow_signal_on_body_touch = input(false)
+only_buy_or_sell_alert_above_below_ema_on_supertrend_change = input(true)
+//only_sell_alert_below_ema_on_supertrend_change = input(false)
+//ema_touch_candle_conditions = input(false)
+
+only_ema_consicutive_buy_sell = input(false)
+
+
+if only_buy_or_sell_alert_above_below_ema_on_supertrend_change
+    buy := close > ema and (direction < 0)
+    sell := close < ema and (direction > 0)
+
+
+if only_ema_consicutive_buy_sell 
+    buy := low > ema 
+    sell := high < ema 
+
+
+
+
+
+if allow_signal_on_body_touch
+    buy := close > ema and ta.change(direction) and low < ema and high > ema 
+    sell := close < ema and ta.change(direction) and low < ema and high > ema 
+
+if allow_signal_on_body_touch and only_buy_or_sell_alert_above_below_ema_on_supertrend_change
+    buy := close > ema and (direction < 0) and low < ema and high > ema 
+    sell := close < ema and (direction > 0) and low < ema and high > ema 
+
+if allow_signal_on_body_touch and only_ema_consicutive_buy_sell
+    buy := close > ema and low < ema and high > ema
+    sell := close < ema and low < ema and high > ema
+   
+
+plotshape(buy, color = color.green , style = shape.labelup , text = "Buy" , textcolor = color.white , location = location.belowbar)
+plotshape(sell, color = color.red , style = shape.labeldown , text = "Sell" , textcolor = color.white , location = location.abovebar)
+
+
